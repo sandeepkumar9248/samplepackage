@@ -14,6 +14,10 @@ public class InAppSDK {
         InAppPeer.getInstance().setListener(instaListener);
     }
 
+    public static void initialisePeer(Context context) {
+        InAppPeer.getInstance().initialise(context);
+    }
+
     public static void initialise(Context context, SurfaceViewRenderer localView, SurfaceViewRenderer remoteView,boolean localMirror,boolean remoteMirror) {
         InAppPeer.getInstance().initialise(context, localView, remoteView,localMirror,remoteMirror);
     }
