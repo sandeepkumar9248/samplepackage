@@ -247,7 +247,7 @@ public class InAppPeer {
 //        mVideoCapturer.initialize(mSurfaceTextureHelper, context, videoSource.getCapturerObserver());
         mVideoTrack = mPeerConnectionFactory.createVideoTrack(VIDEO_TRACK_ID, videoSource);
         mVideoTrack.setEnabled(true);
-        mVideoTrack.addSink(mLocalSurfaceView);
+//        mVideoTrack.addSink(mLocalSurfaceView);
         AudioSource audioSource = mPeerConnectionFactory.createAudioSource(new MediaConstraints());
         mAudioTrack = mPeerConnectionFactory.createAudioTrack(AUDIO_TRACK_ID, audioSource);
         mAudioTrack.setEnabled(true);
