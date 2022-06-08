@@ -234,6 +234,29 @@ public class InAppPeer {
 
     }
 
+    protected void initialise(Context context) {
+
+        EglBase mRootEglBase = EglBase.create();
+
+        //CAN INITIALIZE SEPARATE
+        mPeerConnectionFactory = createPeerConnectionFactory(context, mRootEglBase);
+        Logging.enableLogToDebugOutput(Logging.Severity.LS_VERBOSE);
+        mSurfaceTextureHelper = SurfaceTextureHelper.create("CaptureThread", mRootEglBase.getEglBaseContext());
+        VideoSource videoSource = mPeerConnectionFactory.createVideoSource(false);
+        mVideoCapturer = createVideoCapturer(context);
+        mVideoCapturer.initialize(mSurfaceTextureHelper, context, videoSource.getCapturerObserver());
+        mVideoTrack = mPeerConnectionFactory.createVideoTrack(VIDEO_TRACK_ID, videoSource);
+        mVideoTrack.setEnabled(true);
+        mVideoTrack.addSink(mLocalSurfaceView);
+        AudioSource audioSource = mPeerConnectionFactory.createAudioSource(new MediaConstraints());
+        mAudioTrack = mPeerConnectionFactory.createAudioTrack(AUDIO_TRACK_ID, audioSource);
+        mAudioTrack.setEnabled(true);
+
+        //TO START LOCAL CAPTURE
+        mVideoCapturer.startCapture(VIDEO_RESOLUTION_WIDTH, VIDEO_RESOLUTION_HEIGHT, VIDEO_FPS);
+
+    }
+
     private PeerConnectionFactory createPeerConnectionFactory(Context context, EglBase mRootEglBase) {
         VideoEncoderFactory encoderFactory = new DefaultVideoEncoderFactory(mRootEglBase.getEglBaseContext(),
                 true,
