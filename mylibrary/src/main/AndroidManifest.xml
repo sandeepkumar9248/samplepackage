@@ -7,7 +7,7 @@
     <application android:usesCleartextTraffic="true"
         tools:targetApi="m">
         <activity
-            android:name=".MainActivity"
+            android:name=".InVCPage"
             android:exported="false" />
     </application>
 
