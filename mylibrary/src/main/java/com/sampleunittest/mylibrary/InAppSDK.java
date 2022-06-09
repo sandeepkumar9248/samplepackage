@@ -14,20 +14,16 @@ public class InAppSDK {
         InAppPeer.getInstance().setListener(instaListener);
     }
 
-    public static void initialisePeer(Context context) {
-        InAppPeer.getInstance().initialise(context);
+    public static void initialise(Context context, SurfaceViewRenderer localView, SurfaceViewRenderer remoteView, boolean localMirror, boolean remoteMirror) {
+        InAppPeer.getInstance().initialise(context, localView, remoteView, localMirror, remoteMirror);
     }
 
-    public static void initialise(Context context, SurfaceViewRenderer localView, SurfaceViewRenderer remoteView,boolean localMirror,boolean remoteMirror) {
-        InAppPeer.getInstance().initialise(context, localView, remoteView,localMirror,remoteMirror);
-    }
-
-    public static void makeCall(String remoteId,ActionCallBack callBack) {
+    public static void makeCall(String remoteId, ActionCallBack callBack) {
         InAppPeer.getInstance().makeCall(remoteId, callBack);
     }
 
-    public static void answerCall() {
-        InAppPeer.getInstance().answerCall();
+    public static void answerCall(ActionCallBack callBack) {
+        InAppPeer.getInstance().answerCall(callBack);
     }
 
     public static void disconnect() {

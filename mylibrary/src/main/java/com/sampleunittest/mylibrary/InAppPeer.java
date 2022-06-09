@@ -109,6 +109,7 @@ public class InAppPeer {
                             JSONObject mainJson = new JSONObject(message);
                             String type = mainJson.getString("type");
                             switch (type) {
+
                                 case "hello":
 //                                    if (mPeerConnection == null) {
 //                                        mPeerConnection = createPeerConnection();
@@ -136,6 +137,7 @@ public class InAppPeer {
 
                                 case "offer": {
                                     remoteUserId = mainJson.getString("id");
+                                    instaListener.offerReceived(remoteUserId);
                                     onRemoteOfferReceived(mainJson, remoteUserId);
                                     break;
                                 }
@@ -435,8 +437,18 @@ public class InAppPeer {
                     new SessionDescription(
                             SessionDescription.Type.OFFER,
                             description));
-            answerCall();
-//            instaListener.offerReceived(remoteId);
+//            answerCall(new ActionCallBack() {
+//                @Override
+//                public void onSuccess(String message) {
+//
+//                }
+//
+//                @Override
+//                public void onFailure(String error) {
+//
+//                }
+//            });
+            instaListener.offerReceived(remoteId);
         } catch (JSONException e) {
             e.printStackTrace();
             Log.d("testcase", "offReceived Exp " + e.getMessage());
@@ -502,12 +514,17 @@ public class InAppPeer {
         }, mediaConstraints);
     }
 
-    protected void answerCall() {
+    protected void answerCall(ActionCallBack callBack) {
         if (mPeerConnection == null) {
             mPeerConnection = createPeerConnection();
         }
         MediaConstraints sdpMediaConstraints = new MediaConstraints();
         Log.d("testcase", "Create answer ...");
+        callBack.onSuccess("createAnswer init");
+
+        sdpMediaConstraints.mandatory.add(new MediaConstraints.KeyValuePair("OfferToReceiveAudio", "true"));
+        sdpMediaConstraints.mandatory.add(new MediaConstraints.KeyValuePair("OfferToReceiveVideo", "true"));
+        sdpMediaConstraints.optional.add(new MediaConstraints.KeyValuePair("DtlsSrtpKeyAgreement", "true"));
         mPeerConnection.createAnswer(new SimpleSdpObserver() {
             @Override
             public void onCreateSuccess(SessionDescription sessionDescription) {
@@ -516,14 +533,20 @@ public class InAppPeer {
                         sessionDescription);
 
                 JSONObject message = new JSONObject();
+                callBack.onSuccess("createAnswer sent success");
+
                 try {
                     message.put("id", getRemoteUserId());
                     message.put("type", "answer");
                     message.put("sdp", sessionDescription.description);
                     //aaa
+                    callBack.onSuccess("createAnswer sent success1");
+
                     send(message.toString());
                 } catch (JSONException e) {
                     e.printStackTrace();
+                    callBack.onSuccess("createAnswer sent failed");
+
                 }
             }
         }, sdpMediaConstraints);
