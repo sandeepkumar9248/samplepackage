@@ -18,7 +18,7 @@ import com.sampleunittest.mylibrary.InAppSDK
 class LoginActivity : AppCompatActivity(), View.OnClickListener {
     private val PERMISSION_CODE = 100
     private lateinit var meetingId: AppCompatEditText
-    private val WS_SERVER = "wss://p2papi.instavc.com/"
+    private val webSocketUrl = "wss://p2papi.instavc.com/"
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -80,12 +80,13 @@ class LoginActivity : AppCompatActivity(), View.OnClickListener {
     private fun onConnectSucceed(selfId: String) {
 
         InAppSDK.connectServer(
-            WS_SERVER, selfId,
+            webSocketUrl, selfId,
             object : ActionCallBack {
                 override fun onSuccess(message: String?) {
                     Log.d("onSuccess", message!!)
+                    meetingId.text?.clear()
                     startActivity(
-                        Intent(this@LoginActivity, RemoteIdActivity::class.java)
+                        Intent(this@LoginActivity, InApiVcActivity::class.java)
                     )
                 }
 

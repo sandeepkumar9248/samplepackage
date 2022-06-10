@@ -26,8 +26,8 @@ public class InAppSDK {
         InAppPeer.getInstance().answerCall(callBack);
     }
 
-    public static void disconnect() {
-        InAppPeer.getInstance().disconnect();
+    public static void disconnect(ActionCallBack callBack) {
+        InAppPeer.getInstance().disconnect(callBack);
     }
 
     public static void leave() {

@@ -108,8 +108,8 @@ public class InAppPeer {
                         try {
                             JSONObject mainJson = new JSONObject(message);
                             String type = mainJson.getString("type");
-                            switch (type) {
 
+                            switch (type) {
                                 case "hello":
 //                                    if (mPeerConnection == null) {
 //                                        mPeerConnection = createPeerConnection();
@@ -144,6 +144,7 @@ public class InAppPeer {
 
                                 case "answer":
                                     onRemoteAnswerReceived(mainJson);
+                                    instaListener.answerReceived("Answered");
                                     break;
 
                                 case "candidate":
@@ -214,8 +215,8 @@ public class InAppPeer {
         mRemoteSurfaceView.init(mRootEglBase.getEglBaseContext(), null);
         mRemoteSurfaceView.setScalingType(RendererCommon.ScalingType.SCALE_ASPECT_FILL);
         mRemoteSurfaceView.setMirror(remoteMirror);
-        mRemoteSurfaceView.setEnableHardwareScaler(true);
-        mRemoteSurfaceView.setZOrderMediaOverlay(true);
+        mRemoteSurfaceView.setEnableHardwareScaler(false);
+        mRemoteSurfaceView.setZOrderMediaOverlay(false);
 
         //CAN INITIALIZE SEPARATE
         mPeerConnectionFactory = createPeerConnectionFactory(context, mRootEglBase);
@@ -233,29 +234,6 @@ public class InAppPeer {
 
         //TO START LOCAL CAPTURE
         mVideoCapturer.startCapture(VIDEO_RESOLUTION_WIDTH, VIDEO_RESOLUTION_HEIGHT, VIDEO_FPS);
-
-    }
-
-    protected void initialise(Context context) {
-
-        EglBase mRootEglBase = EglBase.create();
-
-        //CAN INITIALIZE SEPARATE
-        mPeerConnectionFactory = createPeerConnectionFactory(context, mRootEglBase);
-//        Logging.enableLogToDebugOutput(Logging.Severity.LS_VERBOSE);
-//        mSurfaceTextureHelper = SurfaceTextureHelper.create("CaptureThread", mRootEglBase.getEglBaseContext());
-        VideoSource videoSource = mPeerConnectionFactory.createVideoSource(false);
-//        mVideoCapturer = createVideoCapturer(context);
-//        mVideoCapturer.initialize(mSurfaceTextureHelper, context, videoSource.getCapturerObserver());
-        mVideoTrack = mPeerConnectionFactory.createVideoTrack(VIDEO_TRACK_ID, videoSource);
-        mVideoTrack.setEnabled(true);
-//        mVideoTrack.addSink(mLocalSurfaceView);
-        AudioSource audioSource = mPeerConnectionFactory.createAudioSource(new MediaConstraints());
-        mAudioTrack = mPeerConnectionFactory.createAudioTrack(AUDIO_TRACK_ID, audioSource);
-        mAudioTrack.setEnabled(true);
-//
-//        //TO START LOCAL CAPTURE
-//        mVideoCapturer.startCapture(VIDEO_RESOLUTION_WIDTH, VIDEO_RESOLUTION_HEIGHT, VIDEO_FPS);
 
     }
 
@@ -337,7 +315,7 @@ public class InAppPeer {
         return connection;
     }
 
-    private PeerConnection.Observer mPeerConnectionObserver = new PeerConnection.Observer() {
+    private final PeerConnection.Observer mPeerConnectionObserver = new PeerConnection.Observer() {
         @Override
         public void onSignalingChange(PeerConnection.SignalingState signalingState) {
             Log.d("testcase", "onSignalingChange: " + signalingState);
@@ -437,17 +415,6 @@ public class InAppPeer {
                     new SessionDescription(
                             SessionDescription.Type.OFFER,
                             description));
-//            answerCall(new ActionCallBack() {
-//                @Override
-//                public void onSuccess(String message) {
-//
-//                }
-//
-//                @Override
-//                public void onFailure(String error) {
-//
-//                }
-//            });
             instaListener.offerReceived(remoteId);
         } catch (JSONException e) {
             e.printStackTrace();
@@ -552,14 +519,16 @@ public class InAppPeer {
         }, sdpMediaConstraints);
     }
 
-    protected void disconnect() {
+    protected void disconnect(ActionCallBack callBack) {
         JSONObject message = new JSONObject();
         try {
             message.put("id", getRemoteUserId());
             message.put("type", "bye");
             send(message.toString());
+            callBack.onSuccess("Disconnected");
         } catch (JSONException e) {
             Log.d("testcase", "Disconnect " + e.getMessage());
+            callBack.onFailure("Disconnection Failed");
             e.printStackTrace();
         }
         leave();

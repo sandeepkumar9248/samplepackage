@@ -6,9 +6,9 @@ import android.view.View
 import android.widget.Button
 import android.widget.LinearLayout
 import android.widget.RelativeLayout
-import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import androidx.appcompat.widget.AppCompatButton
+import androidx.appcompat.widget.AppCompatEditText
+import androidx.appcompat.widget.AppCompatImageView
 import com.sampleunittest.mylibrary.ActionCallBack
 import com.sampleunittest.mylibrary.InAppListener
 import com.sampleunittest.mylibrary.InAppSDK
@@ -19,11 +19,14 @@ class InApiVcActivity : AppCompatActivity(), View.OnClickListener, InAppListener
     //Views
     private lateinit var callerView: LinearLayout
     private lateinit var receiverView: LinearLayout
+    private lateinit var enterRemoteIdView: LinearLayout
     lateinit var vcView: RelativeLayout
     private var isAudioMuted: Boolean = false
     private var isVideoMuted: Boolean = false
-    private lateinit var muteVideo: AppCompatButton
-    private lateinit var muteAudio: AppCompatButton
+    private lateinit var muteVideo: AppCompatImageView
+    private lateinit var muteAudio: AppCompatImageView
+    private lateinit var remoteIdEt: AppCompatEditText
+    private var remoteId = ""
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -38,68 +41,69 @@ class InApiVcActivity : AppCompatActivity(), View.OnClickListener, InAppListener
         val answerBtn: Button = findViewById(R.id.answerBtn)
         val declineBtn: Button = findViewById(R.id.declineBtn)
         val endCallBtn: Button = findViewById(R.id.endCallBtn)
+        val startCallBtn: Button = findViewById(R.id.startCallBtn)
 
         callerView = findViewById(R.id.callerView)
         receiverView = findViewById(R.id.receiverView)
         vcView = findViewById(R.id.vcView)
+        enterRemoteIdView = findViewById(R.id.enterRemoteIdView)
+        remoteIdEt = findViewById(R.id.remoteId)
 
 
-        val endCall = findViewById<AppCompatButton>(R.id.endCall)
-        val switchCamera = findViewById<AppCompatButton>(R.id.switchCamera)
+        val endCall = findViewById<AppCompatImageView>(R.id.endCall)
+        val switchCamera = findViewById<AppCompatImageView>(R.id.switchCamera)
         muteVideo = findViewById(R.id.muteVideo)
         muteAudio = findViewById(R.id.muteAudio)
-        val ansCall = findViewById<AppCompatButton>(R.id.ansCall)
 
         endCall.setOnClickListener(this)
         switchCamera.setOnClickListener(this)
         muteVideo.setOnClickListener(this)
         muteAudio.setOnClickListener(this)
-        ansCall.setOnClickListener(this)
         answerBtn.setOnClickListener(this)
         declineBtn.setOnClickListener(this)
         endCallBtn.setOnClickListener(this)
+        startCallBtn.setOnClickListener(this)
 
-        InAppSDK.initialise(applicationContext, mLocalSurfaceView, mRemoteSurfaceView, true, true)
+        InAppSDK.initialise(applicationContext, mLocalSurfaceView, mRemoteSurfaceView, false, true)
         InAppSDK.instaListener(this)
-
-        if (intent.getStringExtra("remoteId")?.isEmpty() != true) {
-            Toast.makeText(this, "called", Toast.LENGTH_SHORT).show()
-            callerView.visibility = View.GONE
-            receiverView.visibility = View.GONE
-            vcView.visibility = View.VISIBLE
-            InAppSDK.makeCall(
-                intent.getStringExtra("remoteId"),
-                object : ActionCallBack {
-                    override fun onSuccess(message: String?) {
-                        Log.d("onSuccess", message!!)
-
-                    }
-
-                    override fun onFailure(error: String?) {
-                        Log.d("onSuccess", "error makeCall call" + error!!)
-                    }
-                })
-        }
     }
 
     override fun onClick(view: View?) {
         when (view?.id) {
+            R.id.startCallBtn -> {
+                remoteId = remoteIdEt.text.toString()
+                if (remoteId.isNotEmpty()) {
+                    callerView.visibility = View.VISIBLE
+                    enterRemoteIdView.visibility = View.GONE
+                    Log.d("remoteId", "onClick: $remoteId")
+                    InAppSDK.makeCall(remoteId,
+                        object : ActionCallBack {
+                            override fun onSuccess(message: String?) {
+                                runOnUiThread {
+                                    Log.d("onSuccess", message!!)
+                                }
+                            }
 
-            R.id.declineBtn -> {
-                InAppSDK.disconnect()
+                            override fun onFailure(error: String?) {
+                                Log.d("onSuccess", "error makeCall call" + error!!)
+                            }
+                        })
+                }
+
             }
-            R.id.endCallBtn -> {
-                InAppSDK.disconnect()
+            R.id.declineBtn -> {endCall()
+            }
+            R.id.endCallBtn -> {endCall()
             }
 
             R.id.muteAudio -> {
                 if (isAudioMuted) {
                     isAudioMuted = false
-                    muteAudio.text = "Mute Audio"
+                    muteAudio.setImageResource(R.drawable.ic_baseline_mic_24)
                     InAppSDK.audioUnMute()
                 } else {
                     isAudioMuted = true
-                    muteAudio.text = "UnMute Audio"
+                    muteAudio.setImageResource(R.drawable.ic_baseline_mic_off_24)
                     InAppSDK.audioMute()
                 }
 
@@ -107,19 +111,18 @@ class InApiVcActivity : AppCompatActivity(), View.OnClickListener, InAppListener
             R.id.muteVideo -> {
                 if (isVideoMuted) {
                     isVideoMuted = false
-                    muteVideo.text = "Mute Video"
+                    muteVideo.setImageResource(R.drawable.ic_baseline_videocam_24)
                     InAppSDK.videoUnMute()
                 } else {
                     isVideoMuted = true
                     InAppSDK.videoMute()
-                    muteVideo.text = "UnMute Video"
+                    muteVideo.setImageResource(R.drawable.ic_baseline_videocam_off_24)
                 }
             }
             R.id.switchCamera -> {
                 InAppSDK.switchCamera()
             }
-            R.id.endCall -> {
-                InAppSDK.leave()
+            R.id.endCall -> {endCall()
             }
             R.id.answerBtn -> {
                 InAppSDK.answerCall(object : ActionCallBack {
@@ -140,11 +143,23 @@ class InApiVcActivity : AppCompatActivity(), View.OnClickListener, InAppListener
 
     override fun offerReceived(remoteId: String?) {
         runOnUiThread {
-            Log.d("onSuccess", "offerReceived erre$remoteId")
+            Log.d("onSuccess", "offerReceived from $remoteId")
             receiverView.visibility = View.VISIBLE
             callerView.visibility = View.GONE
             vcView.visibility = View.GONE
+            enterRemoteIdView.visibility = View.GONE
         }
+    }
+
+    override fun answerReceived(message: String?) {
+        runOnUiThread {
+            Log.d("onSuccess", "Call $message")
+            receiverView.visibility = View.GONE
+            callerView.visibility = View.GONE
+            vcView.visibility = View.VISIBLE
+            enterRemoteIdView.visibility = View.GONE
+        }
+
     }
 
     override fun onFinished() {
@@ -152,7 +167,19 @@ class InApiVcActivity : AppCompatActivity(), View.OnClickListener, InAppListener
     }
 
     override fun remoteUserDisconnected() {
-        Log.d("onSuccess", "remoteUserDisconnected")
+        finish()
+    }
 
+    private fun endCall(){
+        InAppSDK.disconnect(object : ActionCallBack {
+            override fun onSuccess(message: String?) {
+
+                Log.d("onSuccess", message!!)
+            }
+
+            override fun onFailure(error: String?) {
+                Log.d("onSuccess", error!!)
+            }
+        })
     }
 }
